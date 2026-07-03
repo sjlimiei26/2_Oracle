@@ -1,4 +1,4 @@
-# 2_Java
+# 2_Oracle
 `Step#2 Oracle`
 ---
 오라클 실습 파일 저장소
