@@ -354,6 +354,288 @@ FROM EMPLOYEE
 -- ORDER BY 입사년도, 입사월, 입사일;
 ORDER BY 2, 3, 4;
 --=============================================================================
+/*
+    * 형변환 함수 : 데이터 타입을 변환해주는 함수
+                    - 문자 / 숫자 / 날짜
+*/
+
+/*
+    * TO_CHAR : 숫자 또는 날짜 타입의 값을 문자 타입으로 변환해주는 함수
+    
+    TO_CHAR(데이터[, 포맷])
+*/
+-- * 숫자 --> 문자
+SELECT 1234 "숫자 타입 데이터", TO_CHAR(1234) "문자 타입 데이터" FROM DUAL;
+
+SELECT TO_CHAR(1234), TO_CHAR(1234, '999999') FROM DUAL;
+--> '9' : 개수만큼 자릿수를 확보. 빈칸은 공백으로 채움!
+
+SELECT TO_CHAR(1234), TO_CHAR(1234, '000000') FROM DUAL;
+--> '0' : 개수만큼 자릿수를 확보. 빈칸은 0으로 채움!
+
+SELECT TO_CHAR(1234, 'L999999') FROM DUAL;
+--> 'L' : 화폐단위 표시.
+
+-- * 직원 정보 조회 (이름, 급여, 연봉) +화폐단위 표시
+SELECT EMP_NAME, TO_CHAR(SALARY, 'L9,999,999,999') SALARY
+                , TO_CHAR(SALARY*12, 'L9,999,999,999') 연봉
+FROM EMPLOYEE;
+---------------------------------------------------------
+-- * 날짜 --> 문자
+SELECT SYSDATE, TO_CHAR(SYSDATE) FROM DUAL;
+
+/*
+    * YYYY : 연도 4글자로 표현 (2026)
+      YY   : 연도 2글자로 표현 (26)
+      
+    * MM   : 월
+    * DD   : 일
+    
+    * HH   : 시 정보 (HOUR)  --> 12시간제
+      HH24 :                --> 24시간제
+      
+    * MI   : 분 (MINUTES)
+    
+    * SS   : 초 (SECONDS)
+*/
+SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') FROM DUAL;
+
+/*
+    * DAY  : 요일 정보 (X요일)
+      DY   : 요일 정보 (X) 
+*/
+SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD DAY DY') FROM DUAL;
+
+/*
+    * MONTH, MON : 월 정보 (X월)
+*/
+SELECT TO_CHAR(SYSDATE, 'MONTH MON') FROM DUAL;
+
+-- * 직원 정보 조회 (이름, 입사일) (입사일: XXXX년 XX월 XX일 형식)
+SELECT EMP_NAME, TO_CHAR(HIRE_DATE, 'YYYY"년" MM"월" DD"일"') HIRE_DATE
+FROM EMPLOYEE;
+--> 표시할 문자(값 자체)는 큰 따옴표("")로 묶어서 형식을 지정해야 함!
+--------------------------------------------------------------------------------
+/*
+    * TO_NUMBER : 문자 타입의 데이터를 숫자 타입으로 변환
+    
+    TO_NUMBER(데이터[, 포맷])
+    => 포맷을 지정하는 경우는 기호가 포함되거나, 화폐단위가 포함된 경우
+*/
+SELECT TO_NUMBER('0123456789') FROM DUAL;
+
+SELECT '10000' + '500' FROM DUAL; --- 10000500 (X) 10000 + 500
+SELECT '10,000' + '500' FROM DUAL; -- 오류 발생
+SELECT TO_NUMBER('10,000', '99,999') + '500' FROM DUAL;
+SELECT TO_NUMBER('10,000', '99,999') + TO_NUMBER('500', '999') FROM DUAL;
+-------------------------------------------------------------------------------
+/*
+    * TO_DATE : 숫자 타입 또는 문자 타입을 날짜 타입으로 변환
+    
+    TO_DATE(데이터[, 포맷])
+*/
+SELECT TO_DATE(20260706) FROM DUAL; -- YYYYMMDD
+
+SELECT TO_DATE(260706) FROM DUAL;   -- YYMMDD
+SELECT TO_DATE(960706) FROM DUAL;
+-- 현재 연도 기준으로 (50년 미만) 자동으로 50년 미만 데이터는 20XX으로 변환
+--                                     50년 이상 데이터는 19XX으로 변환
+
+SELECT TO_DATE(060706) FROM DUAL;  -- 060706 -> 60706 (X)
+SELECT TO_DATE('060706') FROM DUAL; --> 0으로 시작하는 날짜는 문자 타입으로 제시!
+
+-- TO_DATE 기본 포맷 : YYYYMMDD 또는 YYMMDD 일것임!
+SELECT TO_DATE('260706 143940') FROM DUAL; --- 오류!
+SELECT TO_DATE('260706 143940', 'YYMMDD HH24MISS') FROM DUAL;
+--==============================================================================
+/*
+    * NULL 처리 함수 *
+*/
+
+/*
+    * NVL : 해당 컬럼의 값이 NULL인 경우 다른 값으로 대체해주는 함수
+    
+    NVL(컬럼명, 대체할값)
+    => 대체할값: 해당 컬럼의 값이 NULL인 경우 사용!
+*/
+-- 직원 정보 조회 (이름, 보너스)
+SELECT EMP_NAME, NVL(BONUS, 0) BONUS
+FROM EMPLOYEE;
+
+-- 직원 정보 조회 ( 이름, 보너스 포함 연봉 ) 
+--  (급여 + 급여*보너스)*12
+SELECT EMP_NAME, (SALARY + (SALARY * NVL(BONUS, 0)))*12 "보너스 포함 연봉"
+FROM EMPLOYEE;
+
+/*
+    * NVL2 : 해당 컬럼이 NULL일 경우 표시할 값을 지정하고,
+                       NULL이 아닐 경우 표시할 값도 지정할 수 있는 함수
+                       
+    NVL2(컬럼명, NULL이 아닐 경우 대체할 값, NULL일 경우 대체할 값)
+*/
+-- * 직원 정보 조회 (이름, 보너스, 보너스 유무)
+SELECT EMP_NAME, BONUS, NVL2(BONUS, 'O', 'X') "보너스 유무"
+FROM EMPLOYEE;
+
+-- * 이름, 부서코드, 부서배치여부(배정완료/미배정) 조회
+SELECT EMP_NAME, DEPT_CODE, NVL2(DEPT_CODE, '배정완료', '미배정') "부서배치여부"
+FROM EMPLOYEE;
+
+/*
+    * NULLIF : 두 값이 일치하면 NULL, 일치하지 않으면 비교대상1 값을 반환
+    
+    NULLIF(비교대상1, 비교대상2)
+*/
+SELECT NULLIF('999', '999') FROM DUAL; --> NULL
+SELECT NULLIF('999', '777') FROM DUAL; --> 999
+--===========================================================================
+/*
+    * 선택함수
+    
+    DECODE(비교대상, 비교값1, 결과값1, 비교값2, 결과값2, ...)
+    => 비교대상: 컬럼, 연산식, 함수식, ...
+    
+    --> 자바에서 SWITCH와 유사!
+        switch(비교대상) {
+        case 비교값1:
+            결과값1
+            break;
+        case 비교값2:
+            결과값2
+            break;
+        }
+*/
+-- 직원 정보 조회 (직원번호, 이름, 주민번호, 성별)
+SELECT EMP_ID, EMP_NAME, EMP_NO
+        , SUBSTR(EMP_NO, 8, 1) "성별"
+FROM EMPLOYEE;
+
+SELECT EMP_ID, EMP_NAME, EMP_NO
+        , DECODE( SUBSTR(EMP_NO, 8, 1), '1', '남', '2', '여' ) "성별"
+FROM EMPLOYEE;
+
+-- 이름, 급여, 인상될 급여 조회
+/*
+    직급이 J7 : 10% 인상
+          J6 : 15% 인상
+          J5 : 20% 인상
+          
+       그 외에는 5% 인상
+*/
+SELECT EMP_NAME, SALARY
+        , DECODE(JOB_CODE, 'J7', SALARY*1.1, 'J6', SALARY*1.15, 'J5', SALARY*1.2, SALARY*1.05) "인상 예정 급여"
+FROM EMPLOYEE;
+
+/*
+    * CASE WHEN THEN : 조건식에 따라 결과값을 반환해주는 구문(함수)
+    
+    CASE 
+        WHEN 조건식1 THEN 결과값1
+        WHEN 조건식2 THEN 결과값2
+        WHEN 조건식3 THEN 결과값3
+        ..
+        ELSE 결과값
+    END
+*/
+-- 이름, 급여, 급여에 따른 등급 조회
+/*
+    급여가 500만원 이상 '고급'
+          350만원 이상 '중급'
+          그 외에는 '초급'
+*/
+SELECT EMP_NAME, SALARY
+        , CASE 
+                WHEN SALARY >= 5000000 THEN '고급'
+                WHEN SALARY >= 3500000 THEN '중급'
+                ELSE '초급'
+        END "급여에 따른 등급"
+FROM EMPLOYEE;
+--==============================================================================
+-- -------------- 그룹 함수 ---------------
+/*
+    * SUM : 해당 컬럼 값들의 총 합을 반환
+    
+    SUM(데이터)
+    => 데이터는 숫자 타입
+*/
+-- * 전체 직원들의 총 급여 조회
+SELECT SUM(SALARY) "총 급여"
+FROM EMPLOYEE;
+
+-- * \70,096,240 형식으로 조회
+SELECT TO_CHAR(SUM(SALARY), 'L999,999,999') "총 급여"
+FROM EMPLOYEE;
+
+-- * 남직원들의 총 급여 조회
+--   조건절 추가! 
+SELECT SUM(SALARY) "총 급여"
+FROM EMPLOYEE
+WHERE SUBSTR(EMP_NO, 8, 1) IN ('1', '3');
+
+-- * 여직원들의 총 급여
+SELECT SUM(SALARY) "총 급여"
+FROM EMPLOYEE
+WHERE SUBSTR(EMP_NO, 8, 1) IN ('2', '4');
+
+-- * 부서코드가 D5인 직원들의 총 급여
+SELECT SUM(SALARY) "총 급여"           -- 3
+FROM EMPLOYEE                       -- 1
+WHERE DEPT_CODE = 'D5';             -- 2
+
+-- * D5 부서 직원들의 총 연봉
+SELECT SUM(SALARY*12) "총 연봉"      
+FROM EMPLOYEE                     
+WHERE DEPT_CODE = 'D5';    
+---------------------------------------------------------
+/*
+    * AVG : 해당 컬럼의 값들의 평균을 반환
+    
+    AVG(데이터)
+    => 데이터는 숫자 타입
+*/
+-- 직원들의 평균 급여 조회
+SELECT ROUND(AVG(SALARY)) "평균 급여"
+FROM EMPLOYEE;
+
+/*
+    * MIN / MAX : 가장 작은 값 / 가장 큰 값 반환
+    
+    MIN(데이터) / MAX(데이터)
+    => 데이터는 모든 타입(숫자, 날짜, 문자)
+*/
+SELECT MIN(EMP_NAME) "문자 타입 최솟값", MIN(SALARY) "숫자 타입 최솟값"
+        , MIN(HIRE_DATE) "날짜 타입 최솟값"
+FROM EMPLOYEE;
+
+SELECT MAX(EMP_NAME) "문자 타입 최댓값", MAX(SALARY) "숫자 타입 최댓값"
+        , MAX(HIRE_DATE) "날짜 타입 최댓값"
+FROM EMPLOYEE;
+
+/*
+    * COUNT : 행의 갯수를 반환 (단, 조건이 있을 경우 해당 조건에 맞는 행의 개수 반환)
+    
+    COUNT(*) : 조회된 결과의 모든 행 갯수 반환
+    COUNT(컬럼) : 해당 컬럼값이 NULL이 아닌 것만 세어서 갯수를 반환
+    COUNT(DISTINCT 컬럼) : 해당 컬럼값의 중복을 제거한 후의 갯수 반환
+                         => 중복 제거 시 NULL은 포함하지 않고 세어짐!
+*/
+-- 전체 직원 수 조회
+SELECT COUNT(*)
+FROM EMPLOYEE;
+
+-- 남직원 수 조회
+SELECT COUNT(*)
+FROM EMPLOYEE
+WHERE SUBSTR(EMP_NO, 8, 1) IN ('1', '3');
+
+-- 보너스를 받는 직원 수 조회
+SELECT COUNT(*)
+FROM EMPLOYEE
+WHERE BONUS IS NOT NULL;
+
+SELECT COUNT(BONUS)
+FROM EMPLOYEE;
+
 
 
 
