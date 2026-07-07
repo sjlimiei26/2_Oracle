@@ -163,6 +163,49 @@ SELECT E.EMP_ID "직원번호", E.EMP_NAME "직원명", E.DEPT_CODE "직원 부서코드"
             , M.EMP_ID "사수 직원번호", M.EMP_NAME "사수명", M.DEPT_CODE "사수 부서코드"
 FROM EMPLOYEE E, EMPLOYEE M
 WHERE E.MANAGER_ID = M.EMP_ID(+);
+--==============================================================================
+/*
+    * 다중 조인 : 2개 이상의 테이블을 조인하는 것
+*/
+-- * 직원번호, 직원명, 부서명, 직급명 조회
+--   직원(EMPLOYEE), 부서(DEPARTMENT), 직급(JOB)
+
+-- ** 오라클 구문 **
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME
+FROM EMPLOYEE E, DEPARTMENT, JOB J
+WHERE DEPT_CODE = DEPT_ID           --- EMPLOYEE 테이블과 DEPARTMENT 테이블을 조인하기 위한 조건
+    AND E.JOB_CODE = J.JOB_CODE     --- EMPLOYEE 테이블과 JOB 테이블을 조인하기 위한 조건
+ORDER BY EMP_ID;
+
+-- ** ANSI 구문 **
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME
+FROM EMPLOYEE E
+    JOIN DEPARTMENT ON DEPT_CODE = DEPT_ID
+    -- JOIN JOB J ON E.JOB_CODE = J.JOB_CODE;
+    JOIN JOB USING (JOB_CODE);
+
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME
+FROM EMPLOYEE E
+    -- JOIN JOB J ON E.JOB_CODE = J.JOB_CODE;
+    JOIN JOB USING (JOB_CODE)
+    JOIN DEPARTMENT ON DEPT_CODE = DEPT_ID;
+
+-- * 직원번호, 직원명, 부서명, 지역명 조회
+--   직원(EMPLOYEE), 부서(DEPARTMENT), 지역(LOCATION)
+
+-- ** 오라클 구문 **
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, LOCAL_NAME
+FROM EMPLOYEE, DEPARTMENT, LOCATION
+WHERE DEPT_CODE = DEPT_ID           -- EMPLOYEE + DEPARTMENT
+    AND LOCATION_ID = LOCAL_CODE;    -- DEPARTMENT 테이블과 LOCATION 테이블 연결 조건
+
+-- ** ANSI 구문 **
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, LOCAL_NAME
+FROM EMPLOYEE
+    JOIN DEPARTMENT ON DEPT_CODE = DEPT_ID
+    JOIN LOCATION ON LOCATION_ID = LOCAL_CODE;
+
+
 
 
 
