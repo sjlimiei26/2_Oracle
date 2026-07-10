@@ -6,6 +6,7 @@
 
 -- 현재 모든 계정 정보 조회
 SELECT * FROM DBA_USERS;
+SELECT * FROM DBA_USERS WHERE USERNAME LIKE 'C##%';
 -- * 명령문 실행 : 상단의 재생 버튼 또는 Ctrl + Enter !
 
 -- 사용자 계정 추가(생성)
