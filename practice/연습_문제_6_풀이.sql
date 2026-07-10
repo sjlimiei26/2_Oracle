@@ -1,0 +1,71 @@
+-- * KH_연습 문제 *
+-- * 연습용 계정 생성 후 아래 문제를 풀어봅시다 *
+-- * 계정 정보 : C##TEST / TEST *
+/*
+    * 사용자 계정 추가 *
+    1) 관리자계정으로 사용자 생성(추가) SQL문을 실행
+    2) 생성 (CREATE USER) -> 권한 부여(GRANT) -> 테이블 스페이스 설정(ALTER)  
+    3) 접속 -> 좌측 접속 창에 사용자명, 비밀번호를 입력하여 접속
+*/
+-- 사용자명 : C##TEST, 비밀번호 : TEST
+CREATE USER C##TEST IDENTIFIED BY TEST;
+-- 권한 부여: CONNECT, RESOURCE
+GRANT CONNECT, RESOURCE TO C##TEST;
+-- 테이블 스페이스 설정
+ALTER USER C##TEST DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
+
+-- 테스트 계정으로 접속하여 아래 SQL 실행 -- *
+-- 1. 부서 정보를 저장하기 위한 TB_DEPT 테이블을 생성
+--    컬럼: DEPT_CD(숫자, 기본키), DEPT_NAME(가변문자 30자, NOT NULL)
+CREATE TABLE TB_DEPT (
+    DEPT_CD NUMBER CONSTRAINT PK_TD PRIMARY KEY,
+    DEPT_NAME VARCHAR2(30) CONSTRAINT NN_TD NOT NULL
+);
+
+SELECT * FROM TB_DEPT;
+
+-- 2. 사원 정보를 저장하기 위한 TB_EMP 테이블을 생성
+--    컬럼: EMP_NO(숫자, 기본키), EMP_NAME(가변문자 20자, NOT NULL)
+--          GENDER(고정문자 1자, 'M' 또는 'F'만 허용하도록 CHECK 제약조건 설정)
+--          DEPT_CD(숫자, TB_DEPT 테이블의 DEPT_CD 컬럼을 참조하는 외래키 설정)
+CREATE TABLE TB_EMP (
+    EMP_NO NUMBER CONSTRAINT PK_TE PRIMARY KEY,
+    EMP_NAME VARCHAR2(20) CONSTRAINT NN_TE NOT NULL,
+    GENDER CHAR(1) CONSTRAINT CK_TE CHECK(GENDER IN ('M', 'F')),
+    DEPT_CD NUMBER, -- REFERENCES TB_DEPT(DEPT_CD)
+    
+    CONSTRAINT FK_TE FOREIGN KEY(DEPT_CD) REFERENCES TB_DEPT(DEPT_CD)
+);
+
+SELECT * FROM TB_EMP;
+
+
+
+-- 3. TB_EMP 테이블에 연락처를 저장하기 위해 PHONE 컬럼 추가 (가변문자 15자)
+ALTER TABLE TB_EMP ADD PHONE VARCHAR2(15);
+
+
+-- 4. TB_EMP 테이블의 EMP_NAME 컬럼의 크기를 가변문자 50자로 늘리고, NOT NULL 조건을 유지하도록 수정
+ALTER TABLE TB_EMP MODIFY EMP_NAME VARCHAR2(50);
+
+-- 5. TB_EMP 테이블의 PHONE 컬럼명을 CONTACT로 변경
+ALTER TABLE TB_EMP RENAME COLUMN PHONE TO CONTACT;
+
+SELECT * FROM TB_EMP;
+
+
+-- 6. TB_EMP 테이블의 CONTACT 컬럼에 중복된 값이 들어가지 못하도록 UNIQUE 제약조건 설정
+ALTER TABLE TB_EMP ADD CONSTRAINT UQ_TE UNIQUE(CONTACT);
+
+-- 7. TB_EMP 테이블의 GENDER 컬럼에 기본값으로 'M'이 들어가도록 설정
+ALTER TABLE TB_EMP MODIFY GENDER DEFAULT 'M';
+
+
+-- 8. TB_EMP, TB_DEPT 테이블 삭제
+DROP TABLE TB_EMP;
+DROP TABLE TB_DEPT;
+
+
+
+
+
