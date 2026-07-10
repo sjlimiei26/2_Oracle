@@ -91,12 +91,76 @@ SELECT * FROM TB_EMP;
 DELETE FROM TB_DEPT WHERE DEPT_CD = 20;
 SELECT * FROM TB_DEPT WHERE DEPT_CD = 20;
 
+ROLLBACK;
 -- * 복잡한 방법 * --> 만약... TB_DEPT 테이블의 DEPT_NAME 컬럼에 UNIQUE 가 설정되어 있다면..?
+SELECT * FROM TB_DEPT;
+SELECT * FROM TB_EMP;
 
+ALTER TABLE TB_DEPT ADD CONSTRAINT UQ_TD UNIQUE(DEPT_NAME);
+-- * 테이블 복제 --> 구조 + NOT NULL 제약 조건만 복제 ( 다른 제약조건은 복제되지 않음! )
 
+UPDATE TB_DEPT
+   SET DEPT_CD = 50
+ WHERE DEPT_CD = 20;
+ 
+-- * 해당 직원 데이터를 백업(복제) --> 부서코드가 20번 직원
+SELECT * FROM TB_EMP WHERE DEPT_CD = 20;
 
--- 5. TB_DEPT 테이블에서 10번 부서('인사팀')를 삭제하려고 합니다. 하지만 현재 10번 부서에는 '홍길동' 사원이 소속되어 있어 외래키 무결성 에러가 발생합니다. 
+CREATE TABLE TB_EMP_20
+AS ( SELECT * FROM TB_EMP WHERE DEPT_CD = 20 );
+SELECT * FROM TB_EMP_20;
+
+-- * 해당 직원 데이터를 삭제
+DELETE FROM TB_EMP WHERE DEPT_CD = 20;
+SELECT * FROM TB_EMP;
+
+-- * 부서코드 변경 (20 -> 50)
+UPDATE TB_DEPT
+   SET DEPT_CD = 50
+ WHERE DEPT_CD = 20;
+SELECT * FROM TB_DEPT;
+
+-- * 백업해둔 직원 정보 복원(추가)
+--   직원 정보에서 부서코드 변경 (20 -> 50)
+UPDATE TB_EMP_20
+   SET DEPT_CD = 50
+ WHERE DEPT_CD = 20;
+
+SELECT * FROM TB_EMP_20;
+
+--    직원 정보 복원
+INSERT INTO TB_EMP (EMP_NO, EMP_NAME, GENDER, DEPT_CD, CONTACT)
+( SELECT * FROM TB_EMP_20 );
+
+SELECT * FROM TB_EMP;
+SELECT * FROM TB_DEPT;
+
+COMMIT;
+DROP TABLE TB_EMP_20;
+
+-- 5. TB_DEPT 테이블에서 10번 부서('인사팀')를 삭제하려고 합니다. 
+--    하지만 현재 10번 부서에는 '홍길동' 사원이 소속되어 있어 외래키 무결성 에러가 발생합니다. 
 --    에러를 내지 않고 10번 부서를 안전하게 삭제하기 위한 SQL을 작성하세요.
+DELETE FROM TB_DEPT WHERE DEPT_CD = 10;  --> 외래키로 사용 시 삭제 불가 (RESTRICTED)
+
+--  1) CASCADE (전체 삭제 -> 부모테이블(TB_DEPT)/자식테이블(TB_EMP)) 
+--  2) NULL ( 부모 테이블에서만 삭제하고, 자식 테이블에서는 해당 값을 NULL로 변경) *
+--     => ON DELETE SET NULL
+-- * 외래키 설정 변경 (삭제 -> 생성)
+--   [1] 삭제
+ALTER TABLE TB_EMP DROP CONSTRAINT FK_TE;
+--   [2] 생성
+ALTER TABLE TB_EMP ADD CONSTRAINT FK_TE FOREIGN KEY(DEPT_CD) REFERENCES TB_DEPT(DEPT_CD) ON DELETE SET NULL;
+
+-- * 해당 부서 삭제
+DELETE FROM TB_DEPT WHERE DEPT_CD = 10;
+SELECT * FROM TB_DEPT WHERE DEPT_CD = 10;
+
+SELECT * FROM TB_DEPT;
+SELECT * FROM TB_EMP;
+
+
+
 
 
 
