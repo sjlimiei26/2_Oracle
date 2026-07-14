@@ -275,9 +275,44 @@ END;
 SELECT EMP_ID FROM EMPLOYEE WHERE EMP_NAME = '노옹철';
 ROLLBACK;
 --------------------------------------------------------------------------------
+/*
+    * PL/SQL 프로시저
+    : 특정 비즈니스 로직을 처리하는 PL/SQL 코드를 DB에 저장해둘 수 있는 객체
+    
+    - 매개변수 종류 -
+      * IN  : 자바 메소드의 매개변수처럼, 외부에서 프로시저 내부로 값을 가지고 올 때 사용
+      * OUT : 반환값처럼 프로시저가 처리한 결과를 외부로 줄 때 사용
+*/
+-- * INSERT_TEST_DATA 라는 이름의 프로시저 객체 생성 => 전달된 개수(DCOUNT)만큼 TEST 테이블에 데이터 추가
+CREATE OR REPLACE PROCEDURE INSERT_TEST_DATA
+(
+    DCOUNT IN NUMBER
+)
+IS
+BEGIN
+    
+    FOR I IN 1..DCOUNT
+    LOOP
+        -- 데이터 추가(INSERT)
+        INSERT INTO TEST VALUES (SEQ_TNO.NEXTVAL, SYSDATE);
+    END LOOP;
+
+    COMMIT;     -- 100개의 데이터 추가 완료 후 적용(COMMIT)
+
+    DBMS_OUTPUT.PUT_LINE(DCOUNT || '개의 데이터가 추가되었습니다.');
+END;
+/
 
 
+-- * 생성된 프로시저를 사용(실행)
+CALL INSERT_TEST_DATA(50);
 
+BEGIN
+    INSERT_TEST_DATA(20);
+END;
+/
+
+SELECT COUNT(*) FROM TEST;
 
 
 
